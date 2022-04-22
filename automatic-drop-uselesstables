@@ -1,0 +1,38 @@
+--sql script to drop any backup tables which becomes useless at somepoint of time
+
+--main table
+create table usertable (username character varying, createddate timestamp without time zone);
+
+--datewise backup tables
+create table usertable_bkp_20220419 (username character varying, createddate timestamp without time zone);
+create table usertable_bkp_20220420 (username character varying, createddate timestamp without time zone);
+create table usertable_bkp_20220421 (username character varying, createddate timestamp without time zone);
+
+--script to drop tables except one backup
+--replace schemaname with your schema name
+--replace tablename with your table name
+create or replace function schemaname.test()
+returns void 
+language plpgsql as
+$body$
+declare dt text;
+begin
+create temp table droppingtables(tablename character varying, deleterownumber int) on commit drop;
+
+--directly consider backup table name
+insert into droppingtables
+select table_name as _tablename,row_number() over(order by (right(table_name, 8))::date desc) as _deleterownumber
+from information_schema.tables 
+where table_schema='schemaname' and table_type='BASE TABLE' and table_name ilike 'tablename_bkp%'
+order by table_name desc;
+
+--keeping atleast one backup always
+for dt in (select tablename from droppingtables where deleterownumber > 1) loop
+raise notice '%',dt;
+execute format ('drop table %I cascade',dt);
+end loop;
+end
+$body$
+
+--call the function
+select * from schemaname.test();
