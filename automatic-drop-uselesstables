@@ -1,14 +1,8 @@
 --sql script to drop any backup tables which becomes useless at somepoint of time
 
---main table
-create table usertable (username character varying, createddate timestamp without time zone);
+--example: main table- tablename, backup tables datewise- tablename_bkp_date1,tablename_bkp_date2...
 
---datewise backup tables
-create table usertable_bkp_20220419 (username character varying, createddate timestamp without time zone);
-create table usertable_bkp_20220420 (username character varying, createddate timestamp without time zone);
-create table usertable_bkp_20220421 (username character varying, createddate timestamp without time zone);
-
---script to drop tables except one backup
+--function to drop tables except one backup
 --replace schemaname with your schema name
 --replace tablename with your table name
 create or replace function schemaname.test()
